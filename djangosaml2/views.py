@@ -241,16 +241,17 @@ def logout(request, config_loader_path=None):
     state = StateCache(request.session)
     conf = get_config(config_loader_path, request)
 
-    client = Saml2Client(conf, state_cache=state,
-                         identity_cache=IdentityCache(request.session))
+    client = Saml2Client(conf, state_cache=state, identity_cache=IdentityCache(request.session))
     subject_id = _get_subject_id(request.session)
     if subject_id is None:
-        logger.warning(
-            'The session does not contains the subject id for user %s'
-            % request.user)
+        logger.warning('The session does not contains the subject id for user %s' % request.user)
 
-    result = client.global_logout(subject_id)
-
+    try:
+        result = client.global_logout(subject_id)
+    except Exception as e:
+        logger.warning('Encountered the following error when calling Saml2Client.global_logout(): %s' % e)
+        return failure_redirect('Encountered the following error when trying to do a global logout: %s.' % e)
+        
     state.sync()
 
     if not result:
