@@ -1,3 +1,4 @@
+# Copyright (C) 2015 Ryan McCormack <writepython@gmail.com>
 # Copyright (C) 2010-2013 Yaco Sistemas (http://www.yaco.es)
 # Copyright (C) 2009 Lorenzo Gil Sanchez <lorenzo.gil.sanchez@gmail.com>
 #
@@ -63,6 +64,13 @@ def _get_subject_id(session):
     except KeyError:
         return None
 
+def failure_redirect(message):
+    failure_redirect_url = get_custom_setting('FAILURE_REDIRECT_URL', default='/adfs/failure/?message=%s')
+    try:
+        failure_redirect_url = failure_redirect_url % message
+    except:
+        pass
+    return HttpResponseRedirect(failure_redirect_url)
 
 def login(request,
           config_loader_path=None,
@@ -157,8 +165,7 @@ def assertion_consumer_service(request,
 
     conf = get_config(config_loader_path, request)
     if 'SAMLResponse' not in request.POST:
-        return HttpResponseBadRequest(
-            'Couldn\'t find "SAMLResponse" in POST data.')
+        return failure_redirect("Couldn't find SAMLResponse in POST data.")
     xmlstr = request.POST['SAMLResponse']
     client = Saml2Client(conf, identity_cache=IdentityCache(request.session))
 
@@ -170,8 +177,7 @@ def assertion_consumer_service(request,
                                                    outstanding_queries)
     if response is None:
         logger.error('SAML response is None')
-        return HttpResponseBadRequest(
-            "SAML response has errors. Please check the logs")
+        return failure_redirect("SAML response is None")
 
     session_id = response.session_id()
     oq_cache.delete(session_id)
@@ -190,7 +196,7 @@ def assertion_consumer_service(request,
                              create_unknown_user=create_unknown_user)
     if user is None:
         logger.error('The user is None')
-        return HttpResponseForbidden("Permission denied")
+        return failure_redirect("Permission denied. The value of user is None")
 
     auth.login(request, user)
     _set_subject_id(request.session, session_info['name_id'])
@@ -249,7 +255,7 @@ def logout(request, config_loader_path=None):
 
     if not result:
         logger.error("Looks like the user %s is not logged in any IdP/AA" % subject_id)
-        return HttpResponseBadRequest("You are not logged in any IdP/AA")
+        return failure_redirect("You are not logged into any IdP/AA")
 
     if len(result) > 1:
         logger.error('Sorry, I do not know how to logout from several sources. I will logout just from the first one')
@@ -266,13 +272,13 @@ def logout(request, config_loader_path=None):
                 return HttpResponseRedirect(get_location(http_info))
             else:
                 logger.error('Unknown binding: %s', binding)
-                return HttpResponseServerError('Failed to log out')
+                return failure_redirect("Failed to log out.")
         else:
             # We must have had a soap logout
             return finish_logout(request, logout_info)
 
     logger.error('Could not logout because there only the HTTP_REDIRECT is supported')
-    return HttpResponseServerError('Logout Binding not supported')
+    return failure_redirect("Logout Binding not supported")
 
 
 def logout_service(request, *args, **kwargs):
@@ -328,7 +334,7 @@ def do_logout_service(request, data, binding, config_loader_path=None, next_page
             return HttpResponseRedirect(get_location(http_info))
     else:
         logger.error('No SAMLResponse or SAMLRequest parameter found')
-        raise Http404('No SAMLResponse or SAMLRequest parameter found')
+        return failure_redirect("No SAMLResponse or SAMLRequest parameter found.")
 
 
 def finish_logout(request, response, next_page=None):
@@ -340,7 +346,7 @@ def finish_logout(request, response, next_page=None):
         return django_logout(request, next_page=next_page)
     else:
         logger.error('Unknown error during the logout')
-        return HttpResponse('Error during logout')
+        return failure_redirect("Error during logout")
 
 
 def metadata(request, config_loader_path=None, valid_for=None):

@@ -1,3 +1,4 @@
+# Copyright (C) 2015 Ryan McCormack <writepython@gmail.com>
 # Copyright (C) 2010-2012 Yaco Sistemas (http://www.yaco.es)
 # Copyright (C) 2009 Lorenzo Gil Sanchez <lorenzo.gil.sanchez@gmail.com>
 #
@@ -29,4 +30,3 @@ urlpatterns = patterns(
     url(r'^metadata/$', 'metadata', name='saml2_metadata'),
 )
 
-handler500 = handler500
