@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
+import logging, sys, traceback
 
 try:
     from xml.etree import ElementTree
@@ -249,7 +249,8 @@ def logout(request, config_loader_path=None):
     try:
         result = client.global_logout(subject_id)
     except Exception as e:
-        logger.warning('Encountered the following error when calling Saml2Client.global_logout(): %s' % e)
+        traceback_info = '\n'.join(traceback.format_exception(*(sys.exc_info())))
+        logger.warning('Encountered the following error when calling Saml2Client.global_logout(): %s' % traceback_info)
         return failure_redirect('Encountered the following error when trying to do a global logout: %s.' % e)
         
     state.sync()
