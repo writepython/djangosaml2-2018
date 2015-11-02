@@ -238,6 +238,10 @@ def logout(request, config_loader_path=None):
     using the pysaml2 library to create the LogoutRequest.
     """
     logger.debug('Logout process started')
+    if not request.user.is_authenticated():
+        logger.debug('User is not authenticated. Redirecting to settings.LOGOUT_REDIRECT_URL')
+        return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)
+        
     state = StateCache(request.session)
     conf = get_config(config_loader_path, request)
 
@@ -267,8 +271,8 @@ def logout(request, config_loader_path=None):
             binding, http_info = logout_info
             if binding == BINDING_HTTP_POST:
                 logger.debug('Returning form to the IdP to continue the logout process')
-                logger.debug(body)
                 body = ''.join(http_info['data'])
+                logger.debug("Body = %s" % body)                
                 return HttpResponse(body)
             elif binding == BINDING_HTTP_REDIRECT:
                 logger.debug('Redirecting to the IdP to continue the logout process')
