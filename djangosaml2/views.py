@@ -229,8 +229,6 @@ def echo_attributes(request,
     return render_to_response(template, {'attributes': identity[0]},
                               context_instance=RequestContext(request))
 
-
-@login_required
 def logout(request, config_loader_path=None):
     """SAML Logout Request initiator
 
