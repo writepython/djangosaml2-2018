@@ -295,9 +295,15 @@ def do_logout_service(request, data, binding, config_loader_path=None, next_page
 
     if 'SAMLResponse' in data:  # we started the logout
         logger.debug('Receiving a logout response from the IdP')
-        response = client.parse_logout_request_response(data['SAMLResponse'], binding)
-        state.sync()
-        return finish_logout(request, response, next_page=next_page)
+        try:
+            response = client.parse_logout_request_response(data['SAMLResponse'], binding)
+            state.sync()
+        except:
+            auth.logout(request)
+            return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)            
+        else:
+            return finish_logout(request, response, next_page=next_page)            
+
 
     elif 'SAMLRequest' in data:  # logout started by the IdP
         logger.debug('Receiving a logout request from the IdP')
