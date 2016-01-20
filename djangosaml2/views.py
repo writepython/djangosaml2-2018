@@ -305,7 +305,7 @@ def do_logout_service(request, data, binding, config_loader_path=None, next_page
         if subject_id is None:
             logger.warning('The session does not contain the subject id for user %s. Performing local logout' % request.user)
             auth.logout(request)
-            return render_to_response(logout_error_template, {}, context_instance=RequestContext(request))
+            return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)                        
         else:
             http_info = client.handle_logout_request(data['SAMLRequest'], subject_id, binding)
             state.sync()
