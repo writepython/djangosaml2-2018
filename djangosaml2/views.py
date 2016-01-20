@@ -131,7 +131,6 @@ def login(request,
     logger.debug('Redirecting the user to the IdP')
     return HttpResponseRedirect(get_location(result))
 
-
 @require_POST
 @csrf_exempt
 def assertion_consumer_service(request, config_loader_path=None, attribute_mapping=None, create_unknown_user=None):
@@ -196,7 +195,6 @@ def assertion_consumer_service(request, config_loader_path=None, attribute_mappi
         relay_state = settings.LOGIN_REDIRECT_URL
     logger.debug('Redirecting to the RelayState: ' + relay_state)
     return HttpResponseRedirect(relay_state)
-
 
 @login_required
 def echo_attributes(request,
@@ -270,15 +268,12 @@ def logout(request, config_loader_path=None):
     logger.error('Could not logout because there only the HTTP_REDIRECT is supported')
     return failure_redirect("Logout Binding not supported")
 
-
 def logout_service(request, *args, **kwargs):
     return do_logout_service(request, request.GET, BINDING_HTTP_REDIRECT, *args, **kwargs)
-
 
 @csrf_exempt
 def logout_service_post(request, *args, **kwargs):
     return do_logout_service(request, request.POST, BINDING_HTTP_POST, *args, **kwargs)
-
 
 def do_logout_service(request, data, binding, config_loader_path=None, next_page=None, logout_error_template='djangosaml2/logout_error.html'):
     """
@@ -304,7 +299,6 @@ def do_logout_service(request, data, binding, config_loader_path=None, next_page
         else:
             return finish_logout(request, response, next_page=next_page)            
 
-
     elif 'SAMLRequest' in data:  # logout started by the IdP
         logger.debug('Receiving a logout request from the IdP')
         subject_id = _get_subject_id(request.session)
@@ -316,11 +310,16 @@ def do_logout_service(request, data, binding, config_loader_path=None, next_page
             http_info = client.handle_logout_request(data['SAMLRequest'], subject_id, binding)
             state.sync()
             auth.logout(request)
-            return HttpResponseRedirect(get_location(http_info))
+            redirect_location = settings.LOGOUT_REDIRECT_URL
+            try:
+                redirect_location = get_location(http_info)
+            except: 
+                traceback_info = '\n'.join(traceback.format_exception(*(sys.exc_info())))               
+                logger.error('Encountered the following error calling get_location(http_info) with an http_info value of %s: %s' % (http_info, traceback_info)
+            return HttpResponseRedirect(redirect_location)
     else:
         logger.error('No SAMLResponse or SAMLRequest parameter found')
         return failure_redirect("No SAMLResponse or SAMLRequest parameter found.")
-
 
 def finish_logout(request, response, next_page=None):
     if response and response.status_ok():
@@ -332,16 +331,13 @@ def finish_logout(request, response, next_page=None):
         logger.error('Unknown error during the logout')
         return failure_redirect("Error during logout")
 
-
 def metadata(request, config_loader_path=None, valid_for=None):
     """Returns an XML with the SAML 2.0 metadata for this
     SP as configured in the settings.py file.
     """
     conf = get_config(config_loader_path, request)
     metadata = entity_descriptor(conf)
-    return HttpResponse(content=str(metadata),
-                        content_type="text/xml; charset=utf8")
-
+    return HttpResponse(content=str(metadata), content_type="text/xml; charset=utf8")
 
 def register_namespace_prefixes():
     from saml2 import md, saml, samlp
