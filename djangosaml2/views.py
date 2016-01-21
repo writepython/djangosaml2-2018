@@ -315,7 +315,7 @@ def do_logout_service(request, data, binding, config_loader_path=None, next_page
                 redirect_location = get_location(http_info)
             except: 
                 traceback_info = '\n'.join(traceback.format_exception(*(sys.exc_info())))               
-                logger.error('Encountered the following error calling get_location(http_info) with an http_info value of %s: %s' % http_info, traceback_info)
+                logger.error('Encountered the following error calling get_location(http_info) with an http_info value of %s: %s' % (http_info, traceback_info))
             return HttpResponseRedirect(redirect_location)
     else:
         logger.error('No SAMLResponse or SAMLRequest parameter found')
