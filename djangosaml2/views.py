@@ -283,6 +283,7 @@ def do_logout_service(request, data, binding, config_loader_path=None, next_page
     Note that the IdP can request a logout even when we didn't initiate the process as a single logout request started by another SP.
     """
     logger.debug('Logout service started')
+    logger.debug("Data = %s" % data)                
     conf = get_config(config_loader_path, request)
 
     state = StateCache(request.session)
@@ -294,6 +295,8 @@ def do_logout_service(request, data, binding, config_loader_path=None, next_page
             response = client.parse_logout_request_response(data['SAMLResponse'], binding)
             state.sync()
         except:
+            traceback_info = '\n'.join(traceback.format_exception(*(sys.exc_info())))               
+            logger.error('Encountered the following error in the logout service with a data value of %s: %s' % (data, traceback_info))            
             auth.logout(request)
             return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)            
         else:
