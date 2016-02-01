@@ -343,9 +343,7 @@ def metadata(request, config_loader_path=None, valid_for=None):
     return HttpResponse(content=str(metadata), content_type="text/xml; charset=utf8")
 
 def register_namespace_prefixes():
-    from saml2 import md, saml, samlp
-    import xmlenc
-    import xmldsig
+    from saml2 import md, saml, samlp, xmlenc, xmldsig
     prefixes = (('saml', saml.NAMESPACE),
                 ('samlp', samlp.NAMESPACE),
                 ('md', md.NAMESPACE),
