@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Ryan McCormack <writepython@gmail.com>
+# Copyright (C) 2015-2016 Ryan McCormack <writepython@gmail.com>
 # Copyright (C) 2010-2013 Yaco Sistemas (http://www.yaco.es)
 # Copyright (C) 2009 Lorenzo Gil Sanchez <lorenzo.gil.sanchez@gmail.com>
 #
@@ -294,6 +294,8 @@ def do_logout_service(request, data, binding, config_loader_path=None, next_page
             response = client.parse_logout_request_response(data['SAMLResponse'], binding)
             state.sync()
         except:
+            traceback_info = '\n'.join(traceback.format_exception(*(sys.exc_info())))
+            logger.warning('Encountered the following error when calling Saml2Client.global_logout(): %s' % traceback_info)            
             auth.logout(request)
             return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)            
         else:
@@ -340,9 +342,7 @@ def metadata(request, config_loader_path=None, valid_for=None):
     return HttpResponse(content=str(metadata), content_type="text/xml; charset=utf8")
 
 def register_namespace_prefixes():
-    from saml2 import md, saml, samlp
-    import xmlenc
-    import xmldsig
+    from saml2 import md, saml, samlp, xmlenc, xmldsig    
     prefixes = (('saml', saml.NAMESPACE),
                 ('samlp', samlp.NAMESPACE),
                 ('md', md.NAMESPACE),
