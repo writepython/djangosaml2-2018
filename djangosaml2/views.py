@@ -213,12 +213,18 @@ def echo_attributes(request,
                               context_instance=RequestContext(request))
 
 def logout(request, config_loader_path=None):
-    """SAML Logout Request initiator
-
-    This view initiates the SAML2 Logout request
-    using the pysaml2 library to create the LogoutRequest.
+    """
+    SAML Logout Request initiator
+    This view initiates the SAML2 Logout request using the pysaml2 library to create the LogoutRequest.
     """
     logger.debug('Logout process started')
+    initiate_global_logout = get_custom_setting('DJANGOSAML_INITIATE_GLOBAL_LOGOUT', default=True)
+    # Handle SP that should NOT initiate a global logout
+    if not initiate_global_logout:
+        logger.debug('SP cannot initiate a global logout. Doing local logout for %s and redirecting to %s' % (request.user, settings.LOGOUT_REDIRECT_URL)        
+        auth.logout(request)
+        return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)
+    # Handle SP that should initiate a global logout        
     if not request.user.is_authenticated():
         logger.debug('User is not authenticated. Redirecting to settings.LOGOUT_REDIRECT_URL')
         return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)
