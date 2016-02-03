@@ -221,7 +221,7 @@ def logout(request, config_loader_path=None):
     initiate_global_logout = get_custom_setting('DJANGOSAML_INITIATE_GLOBAL_LOGOUT', default=True)
     # Handle SP that should NOT initiate a global logout
     if not initiate_global_logout:
-        logger.debug('SP cannot initiate a global logout. Doing local logout for %s and redirecting to %s' % (request.user, settings.LOGOUT_REDIRECT_URL)        
+        logger.debug('SP cannot initiate a global logout. Doing local logout for %s and redirecting to %s' % (request.user, settings.LOGOUT_REDIRECT_URL))
         auth.logout(request)
         return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)
     # Handle SP that should initiate a global logout        
